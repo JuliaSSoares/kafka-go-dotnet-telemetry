@@ -11,4 +11,4 @@ RUN go mod download
 COPY . .
 
 # Compila e roda
-CMD ["go", "run", "main.go"]
+CMD ["go", "run", "cmd/producer/main.go"]
