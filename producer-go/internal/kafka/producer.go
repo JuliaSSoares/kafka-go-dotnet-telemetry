@@ -1,10 +1,7 @@
 package kafka
 
 import (
-	"encoding/json"
-
 	"github.com/confluentinc/confluent-kafka-go/kafka"
-	"github.com/julia.soares/producer-go/internal/domain"
 )
 
 type KafkaProducer struct {
@@ -19,10 +16,15 @@ func NewKafkaProducer(server string) (*KafkaProducer, error) {
 	return &KafkaProducer{producer: p}, nil
 }
 
-func (kp *KafkaProducer) Publish(topic string, data domain.Telemetria) error {
-	payload, _ := json.Marshal(data)
+// PublishRaw é o que o RELAY vai usar. Ele recebe o []byte vindo do Outbox.
+func (kp *KafkaProducer) PublishRaw(topic string, payload []byte) error {
 	return kp.producer.Produce(&kafka.Message{
 		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
 		Value:          payload,
 	}, nil)
+}
+
+// Close fecha o producer (importante para não deixar conexões penduradas)
+func (kp *KafkaProducer) Close() {
+	kp.producer.Close()
 }
