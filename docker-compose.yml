@@ -22,7 +22,6 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
-  # Banco de Dados para o Outbox (Producer)
   postgres:
     image: postgres:15-alpine
     container_name: postgres
@@ -35,12 +34,19 @@ services:
     ports:
       - "5432:5432"
 
-  # Fast Layer para o Consumer (.NET)
   redis:
     image: redis:7-alpine
     container_name: redis
     ports:
       - "6379:6379"
+
+  redisinsight:
+    image: redislabs/redisinsight:latest
+    container_name: redisinsight
+    ports:
+      - "8001:5540"
+    depends_on:
+      - redis
 
   producer-go:
     build: ./producer-go

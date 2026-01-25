@@ -1,18 +1,23 @@
-﻿using GeoProcessor.Domain.ValueObjects;
-
-namespace GeoProcessor.Domain.Entities
+﻿namespace GeoProcessor.Domain.Entities
 {
     public class EntregadorLocation
     {
-        public string Id { get; private set; }
-        public Coordinate Position { get; private set; }
-        public DateTime CapturedAt { get; private set; }
+        private EntregadorLocation() { }
 
-        public EntregadorLocation(string id, double lat, double lon, long unixTimestamp)
+        public EntregadorLocation(string entregadorId, double lat, double lon, long unixTimestamp)
         {
-            Id = id;
-            Position = new Coordinate(lat, lon);
-            CapturedAt = DateTimeOffset.FromUnixTimeSeconds(unixTimestamp).UtcDateTime;
+            EntregadorId = entregadorId;
+            Latitude = lat;
+            Longitude = lon;
+            Timestamp = unixTimestamp;
+            CreatedAt = DateTime.UtcNow;
         }
+
+        public int Id { get; private set; }
+        public string EntregadorId { get; private set; }
+        public double Latitude { get; private set; }
+        public double Longitude { get; private set; }
+        public long Timestamp { get; private set; }
+        public DateTime CreatedAt { get; private set; }
     }
 }

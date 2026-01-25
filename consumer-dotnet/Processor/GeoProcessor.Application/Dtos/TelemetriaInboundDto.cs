@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
 namespace GeoProcessor.Application.Dtos
 {
-    class TelemetriaInboundDto
-    {
-    }
+    public record TelemetriaInboundDto(
+            [property: JsonPropertyName("id")] int Id,
+            [property: JsonPropertyName("entregador_id")] string EntregadorId,
+            [property: JsonPropertyName("lat")] double Latitude,
+            [property: JsonPropertyName("long")] double Longitude,
+            [property: JsonPropertyName("timestamp")] long Timestamp
+        );
+
 }
