@@ -10,6 +10,10 @@ Este projeto implementa uma **Arquitetura Orientada a Eventos (EDA)** com foco e
 ## 📋 Índice
 
 - [🏗️ Arquitetura do Sistema](#️-arquitetura-do-sistema)
+- [🛠️ Stack Tecnológico](#️-stack-tecnológico)
+- [🚀 Diferenciais Técnicos](#-diferenciais-técnicos)
+- [⚡ Como Executar](#-como-executar)
+- [🧹 Comandos Úteis](#-comandos-úteis)
 - [📐 Diagramas Técnicos](#-diagramas-técnicos)
   - [Diagrama C4 - Nível 1: Contexto](#diagrama-c4---nível-1-contexto-do-sistema)
   - [Diagrama C4 - Nível 2: Container](#diagrama-c4---nível-2-container)
@@ -18,10 +22,6 @@ Este projeto implementa uma **Arquitetura Orientada a Eventos (EDA)** com foco e
   - [Diagrama de Sequência](#diagrama-de-sequência-fluxo-completo)
   - [Diagrama de Deployment](#diagrama-de-deployment)
 - [📋 ADRs - Architectural Decision Records](#-adrs---architectural-decision-records)
-- [🛠️ Stack Tecnológico](#️-stack-tecnológico)
-- [🚀 Diferenciais Técnicos](#-diferenciais-técnicos)
-- [⚡ Como Executar](#-como-executar)
-- [🧹 Comandos Úteis](#-comandos-úteis)
 
 ---
 
@@ -29,7 +29,111 @@ Este projeto implementa uma **Arquitetura Orientada a Eventos (EDA)** com foco e
 
 O sistema simula um cenário logístico real, onde frotas de entregadores enviam coordenadas GPS continuamente. A arquitetura foi desenhada para garantir que **nenhum dado seja perdido** (via **Outbox Pattern**) e que a leitura seja **instantânea** (via **Redis**).
 
+
 ---
+
+## 🛠️ Stack Tecnológico
+
+### 🔵 Producer (Go)
+| Componente | Tecnologia | Versão | Uso |
+|------------|-----------|---------|-----|
+| Runtime | Go | 1.21 | Linguagem principal |
+| PostgreSQL Driver | pgx | v5 | Conexão com banco |
+| Kafka Client | confluent-kafka-go | v2 | Publicação de eventos |
+| Patterns | Outbox Pattern | - | Garantia de entrega |
+
+### 🟢 Consumer (.NET)
+| Componente | Tecnologia | Versão | Uso |
+|------------|-----------|---------|-----|
+| Runtime | .NET | 10.0 | Linguagem principal |
+| Framework | Worker Service | - | Background service |
+| ORM | Entity Framework Core | 8.0 | Persistência |
+| CQRS | MediatR | 12.0 | Desacoplamento |
+| Kafka Client | Confluent.Kafka | 2.3 | Consumo de eventos |
+| Redis Client | StackExchange.Redis | 2.7 | Cache management |
+
+### 🏗️ Infraestrutura
+| Componente | Tecnologia | Versão | Porta |
+|------------|-----------|---------|-------|
+| Message Broker | Apache Kafka | 7.5.0 | 9092 |
+| Coordination | Zookeeper | 7.5.0 | 2181 |
+| Cold Storage | PostgreSQL | 15 | 5432 |
+| Fast Storage | Redis | 7 | 6379 |
+| Observability | RedisInsight | latest | 8001 |
+| Orchestration | Docker Compose | 2.x | - |
+
+---
+
+## 🚀 Diferenciais Técnicos
+
+### 1. 🔐 Transactional Outbox Pattern
+Resolve o problema de escrita dual (Banco + Kafka), garantindo atomicidade e entrega no mínimo uma vez (at-least-once delivery).
+
+### 2. 💾 Persistência Poliglota
+- **PostgreSQL:** Histórico completo, queries analíticas, ACID compliance
+- **Redis:** Última posição, acesso O(1), TTL automático
+
+### 3. 🏛️ Clean Architecture no Consumer
+- Separação clara de responsabilidades (Domain, Application, Infrastructure)
+- MediatR para desacoplamento entre camadas
+- Testabilidade elevada (unit tests + integration tests)
+
+### 4. 🔄 Idempotência
+Sistema preparado para mensagens duplicadas através de:
+- Chaves únicas de identificação (driver_id + timestamp)
+- Verificação de duplicatas antes de processar
+- Operações SET no Redis (naturalmente idempotentes)
+
+### 5. 📡 Event-Driven Architecture
+- Desacoplamento completo entre Producer e Consumer
+- Capacidade de adicionar novos consumidores sem alterar Producer
+- Replay de eventos via Kafka retention (até 7 dias configurável)
+
+---
+
+## ⚡ Como Executar
+
+### Pré-requisitos
+- 🐳 Docker 20.10+
+- 🐙 Docker Compose 2.0+
+
+### Executar o Sistema Completo
+
+```bash
+# 1. Clone o repositório
+git clone https://github.com/seu-usuario/kafka-go-dotnet-telemetry.git
+cd kafka-go-dotnet-telemetry
+
+# 2. Suba todos os serviços
+docker-compose up -d --build
+
+# 3. Verifique o status
+docker-compose ps
+
+# 4. Acompanhe os logs
+docker-compose logs -f
+```
+
+
+## 🧹 Comandos Úteis
+
+```bash
+# Parar tudo
+docker-compose down
+
+# Parar e limpar volumes
+docker-compose down -v
+
+# Reiniciar serviço específico
+docker-compose restart consumer-dotnet
+
+# Ver uso de recursos
+docker stats
+
+# Entrar em container
+docker exec -it consumer-dotnet sh
+```
+
 
 ## 📐 Diagramas Técnicos
 
@@ -437,155 +541,3 @@ graph TB
 1. **RabbitMQ** - Menor throughput, melhor para RPC patterns
 2. **AWS SQS/SNS** - Vendor lock-in, custo por mensagem
 3. **Redis Streams** - Menos maduro, sem ecosystem
-
----
-
-## 🛠️ Stack Tecnológico
-
-### 🔵 Producer (Go)
-| Componente | Tecnologia | Versão | Uso |
-|------------|-----------|---------|-----|
-| Runtime | Go | 1.21 | Linguagem principal |
-| PostgreSQL Driver | pgx | v5 | Conexão com banco |
-| Kafka Client | confluent-kafka-go | v2 | Publicação de eventos |
-| Patterns | Outbox Pattern | - | Garantia de entrega |
-
-### 🟢 Consumer (.NET)
-| Componente | Tecnologia | Versão | Uso |
-|------------|-----------|---------|-----|
-| Runtime | .NET | 10.0 | Linguagem principal |
-| Framework | Worker Service | - | Background service |
-| ORM | Entity Framework Core | 8.0 | Persistência |
-| CQRS | MediatR | 12.0 | Desacoplamento |
-| Kafka Client | Confluent.Kafka | 2.3 | Consumo de eventos |
-| Redis Client | StackExchange.Redis | 2.7 | Cache management |
-
-### 🏗️ Infraestrutura
-| Componente | Tecnologia | Versão | Porta |
-|------------|-----------|---------|-------|
-| Message Broker | Apache Kafka | 7.5.0 | 9092 |
-| Coordination | Zookeeper | 7.5.0 | 2181 |
-| Cold Storage | PostgreSQL | 15 | 5432 |
-| Fast Storage | Redis | 7 | 6379 |
-| Observability | RedisInsight | latest | 8001 |
-| Orchestration | Docker Compose | 2.x | - |
-
----
-
-## 🚀 Diferenciais Técnicos
-
-### 1. 🔐 Transactional Outbox Pattern
-Resolve o problema de escrita dual (Banco + Kafka), garantindo atomicidade e entrega no mínimo uma vez (at-least-once delivery).
-
-### 2. 💾 Persistência Poliglota
-- **PostgreSQL:** Histórico completo, queries analíticas, ACID compliance
-- **Redis:** Última posição, acesso O(1), TTL automático
-
-### 3. 🏛️ Clean Architecture no Consumer
-- Separação clara de responsabilidades (Domain, Application, Infrastructure)
-- MediatR para desacoplamento entre camadas
-- Testabilidade elevada (unit tests + integration tests)
-
-### 4. 🔄 Idempotência
-Sistema preparado para mensagens duplicadas através de:
-- Chaves únicas de identificação (driver_id + timestamp)
-- Verificação de duplicatas antes de processar
-- Operações SET no Redis (naturalmente idempotentes)
-
-### 5. 📡 Event-Driven Architecture
-- Desacoplamento completo entre Producer e Consumer
-- Capacidade de adicionar novos consumidores sem alterar Producer
-- Replay de eventos via Kafka retention (até 7 dias configurável)
-
----
-
-## ⚡ Como Executar
-
-### Pré-requisitos
-- 🐳 Docker 20.10+
-- 🐙 Docker Compose 2.0+
-
-### Executar o Sistema Completo
-
-```bash
-# 1. Clone o repositório
-git clone https://github.com/seu-usuario/kafka-go-dotnet-telemetry.git
-cd kafka-go-dotnet-telemetry
-
-# 2. Suba todos os serviços
-docker-compose up -d --build
-
-# 3. Verifique o status
-docker-compose ps
-
-# 4. Acompanhe os logs
-docker-compose logs -f
-```
-
-### Serviços Disponíveis
-
-| Serviço | Porta | Acesso | Credenciais |
-|---------|-------|--------|-------------|
-| ⚡ Kafka | 9092 | localhost:9092 | - |
-| 🐘 PostgreSQL | 5432 | localhost:5432 | user_geo / password_geo |
-| ⚡ Redis | 6379 | localhost:6379 | - |
-| 📈 RedisInsight | 8001 | http://localhost:8001 | - |
-
----
-
-###
-
-## ⚡ Como Executar
-
-### Pré-requisitos
-- Docker 20.10+
-- Docker Compose 2.0+
-
-### Executar o Sistema Completo
-
-```bash
-# 1. Clone o repositório
-git clone https://github.com/seu-usuario/kafka-go-dotnet-telemetry.git
-cd kafka-go-dotnet-telemetry
-
-# 2. Suba todos os serviços
-docker-compose up -d --build
-
-# 3. Verifique o status
-docker-compose ps
-
-# 4. Acompanhe os logs
-docker-compose logs -f
-```
-
-### Serviços Disponíveis
-
-| Serviço | Porta | Acesso |
-|---------|-------|--------|
-| Kafka | 9092 | localhost:9092 |
-| PostgreSQL | 5432 | localhost:5432 |
-| Redis | 6379 | localhost:6379 |
-| RedisInsight | 8001 | http://localhost:8001 |
-
----
-
-
-
-## 🧹 Comandos Úteis
-
-```bash
-# Parar tudo
-docker-compose down
-
-# Parar e limpar volumes
-docker-compose down -v
-
-# Reiniciar serviço específico
-docker-compose restart consumer-dotnet
-
-# Ver uso de recursos
-docker stats
-
-# Entrar em container
-docker exec -it consumer-dotnet sh
-```
