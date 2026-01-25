@@ -1,4 +1,5 @@
 # 📡 Real-time Telemetry Pipeline (Go + Kafka + .NET)
+![Status](https://img.shields.io/badge/status-under--construction-orange)
 
 Sistema distribuído de alta performance para ingestão, processamento e monitoramento de telemetria GPS em tempo real.
 
