@@ -97,6 +97,7 @@ Sistema preparado para mensagens duplicadas através de:
 | Observability | RedisInsight | latest | 8001 |
 | Orchestration | Docker Compose | 2.x | - |
 
+</br>
 
 ## ⚡ Como Executar
 
