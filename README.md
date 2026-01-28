@@ -178,7 +178,7 @@ sequenceDiagram
             R->>DB: 🔍 SELECT * FROM outbox<br/>WHERE status='PENDING'<br/>LIMIT 100
             DB-->>R: 📊 Registros pendentes
             
-            R->>K: 📤 Produce(topic: telemetry.positions,<br/>key: driver_id, value: json)
+            R->>K: 📤 Produce(topic: telemetria.entregadores,<br/>key: entregador_id, value: json)
             K-->>R: ✅ ACK (offset: 12345)
             
             R->>DB: ✅ UPDATE outbox<br/>SET status='PROCESSED',<br/>processed_at=NOW()
@@ -191,7 +191,7 @@ sequenceDiagram
         W->>W: ✅ Deserialize JSON<br/>& Validate schema
         
         par Persistência Paralela
-            W->>DB: 💾 INSERT INTO positions<br/>(driver_id, lat, lon,<br/>timestamp, created_at)
+            W->>DB: 💾 INSERT INTO positions<br/>(entregador_id, lat, lon,<br/>timestamp, created_at)
             DB-->>W: ✅ Saved
         and
             W->>RD: ⚡ SET telemetry:driver_123<br/>value: {lat, lon, ts}<br/>EX 3600
